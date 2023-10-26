@@ -1,11 +1,29 @@
 'use client';
-import React,{ useState } from 'react';
+import React,{ useState,useEffect } from 'react';
+
 
 export default function Home(){
     const [reminderList,setReminderList] = useState([])
     const [name,setName] = useState()
     const [date,setDate] = useState()
     const [invalid,setInvalid] = useState(false)
+
+    //use of local storage
+    useEffect(()=>{
+        let listOfReminders = [];
+        listOfReminders = localStorage["reminders"];
+        if(listOfReminders!== null){
+            let list = []
+           listOfReminders = JSON.parse(listOfReminders);
+            listOfReminders.map((element)=>{
+                list.push(element)
+            })
+            setReminderList(list);
+        }else{
+            localStorage.clear();
+        }
+    },[])
+    
     
     const addReminder = (e)=>{
         e.preventDefault();
@@ -30,7 +48,7 @@ export default function Home(){
                     }
                 })
                 setReminderList(reminderList);
-            }else{
+            }else{localStorage
                 newReminder = {
                     date : date,
                     reminders:[],
@@ -39,8 +57,10 @@ export default function Home(){
                 reminderList.push(newReminder);
                 reminderList.sort(function(a,b){
                     let dateA = convertDateFormat(a.date);
+                    let newDateA = new Date(dateA)
                     let dateB = convertDateFormat(b.date);
-                    return dateA - dateB;
+                    let newDateB = new Date(dateB)
+                    return newDateA - newDateB;
 
                 })
                 setReminderList(reminderList);
@@ -48,12 +68,12 @@ export default function Home(){
         }else{
             setInvalid(true);
         }
-        const sortedList = [];
+        localStorage.setItem("reminders",JSON.stringify(reminderList));
     }
     const convertDateFormat = (date)=>{
         let dateString = date.split('/')
         let dateFormat = dateString[2] + '-' + dateString[1] + '-' + dateString[0];
-        return new Date(dateFormat);
+        return dateFormat;
     }
     const isValidDateFormat = (dateString) => {
         // Regular expression to match the format dd/mm/yyyy
@@ -73,10 +93,12 @@ export default function Home(){
     }
 
     const verifyFutureDate = (date)=>{
+        const convertedDateReminder = convertDateFormat(date)
         const dateToday = new Date()
-        const dateReminder = convertDateFormat(date)
-        let timeReminder = dateReminder.getTime();
+        const dateReminder = new Date(convertedDateReminder)
+        
         let timeToday = dateToday.getTime()
+        let timeReminder = dateReminder.getTime();
 
         if(timeToday < timeReminder){
             return true;
@@ -98,6 +120,7 @@ export default function Home(){
         list = list.filter(rem=>(rem.reminders.length > 0))
         console.log(list);
         setReminderList(list);
+        localStorage.setItem("reminders",JSON.stringify(reminderList));
         
     }
 
